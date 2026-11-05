@@ -1,0 +1,13 @@
+footage/
+*.mp4
+*.avi
+*.mov
+*.pt
+*.pth
+*.onnx
+*.engine
+*.weights
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
