@@ -15,8 +15,8 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      # TODO: once pyproject.toml exists, replace this with: pip install -e ".[dev]"
-      - run: pip install ruff pytest
+      # Installs the package plus dev tools (pytest, ruff) as defined in pyproject.toml.
+      - run: pip install -e ".[dev]"
       # Style and obvious-mistake check.
       - run: ruff check .
       # Run tests. Exit code 5 means "no tests found yet", which is fine for now.
