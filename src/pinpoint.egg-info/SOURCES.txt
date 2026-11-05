@@ -1,8 +1,0 @@
-README.md
-pyproject.toml
-src/pinpoint/__init__.py
-src/pinpoint.egg-info/PKG-INFO
-src/pinpoint.egg-info/SOURCES.txt
-src/pinpoint.egg-info/dependency_links.txt
-src/pinpoint.egg-info/requires.txt
-src/pinpoint.egg-info/top_level.txt
