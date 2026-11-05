@@ -1,3 +1,41 @@
 # Pinpoint
 
-A CV-aimed balloon-popping turret.
+A computer-vision-aimed turret that finds balloons with a camera and pops them.
+
+## How it works
+
+```
+Camera -> Detector -> Tracker -> Controller -> Turret
+          (find       (follow    (aim and
+          balloons)   each one)  decide to fire)
+```
+
+1. **Camera:** a Logitech C270 streams frames (720p, 30 fps).
+2. **Detector:** finds balloons in each frame and outputs bounding boxes.
+3. **Tracker:** follows each balloon across frames and estimates its position and velocity.
+4. **Controller:** converts the tracked position into pan/tilt angles and decides when to fire.
+
+Footage can be replayed from video files so the vision work can be developed without the hardware.
+
+## Status
+
+Early stage: the repo is an empty skeleton. The folder layout is in place and the code is yet to be written.
+
+## Planned stack
+
+Python 3.11, numpy, OpenCV, pytest, ruff.
+
+## Folder layout
+
+| Folder | Purpose |
+|---|---|
+| `src/pinpoint/` | The main package: interfaces, camera/video sources, detectors, tracker, controller |
+| `scripts/` | Runnable tools, such as replaying a video through a detector |
+| `benchmarks/` | Scoring detectors against labelled footage |
+| `tests/` | Automated tests |
+| `docs/` | Project documentation, such as the footage shot list |
+| `.github/workflows/` | CI configuration |
+
+## Footage and model weights
+
+Video footage and model weights are large, so they are git-ignored. Share them through the team drive instead.
