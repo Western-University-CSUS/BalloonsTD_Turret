@@ -1,0 +1,24 @@
+name: CI
+
+# Runs on every push to main and on every pull request.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  checks:
+    # GitHub provides this temporary Linux machine; nothing to host ourselves.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      # TODO: once pyproject.toml exists, replace this with: pip install -e ".[dev]"
+      - run: pip install ruff pytest
+      # Style and obvious-mistake check.
+      - run: ruff check .
+      # Run tests. Exit code 5 means "no tests found yet", which is fine for now.
+      # TODO: remove the `|| ...` once the repo has tests.
+      - run: pytest || [ $? -eq 5 ]
