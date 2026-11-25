@@ -1,3 +1,6 @@
+#Local docs
+docs.local/
+
 footage/
 *.mp4
 *.avi
