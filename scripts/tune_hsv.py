@@ -54,6 +54,10 @@ def main(argv: list[str] | None = None) -> int:
                 print("Failed to read a frame from the camera", file=sys.stderr)
                 return 1
 
+            # Closing the window with its X button destroys the trackbars, and reading them
+            # afterwards raises, so treat it the same as pressing q.
+            if cv2.getWindowProperty(CONTROLS, cv2.WND_PROP_VISIBLE) < 1:
+                return 0
             lower, upper = read_range()
             hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             mask = cv2.inRange(hsv, np.array(lower), np.array(upper))
