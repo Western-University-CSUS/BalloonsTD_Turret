@@ -1,74 +1,78 @@
+import argparse
 import os
-import time
+import sys
 from datetime import datetime
 
 import cv2
 
-cap = cv2.VideoCapture(0)
-FPS_count = "Hold..."
+from pinpoint.camera import (
+    CameraError,
+    FpsCounter,
+    add_camera_args,
+    describe_camera,
+    frame_size,
+    measure_fps,
+    open_camera,
+)
 
-# Check if camera opened
-if not cap.isOpened():
-    print("Failure opening camera")
-    exit()
-else:
-    print("Camera opening")
 
-# Set the capture proportions
-cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Record webcam footage to an mp4 file.")
+    add_camera_args(parser)
+    parser.add_argument("--out-dir", default="footage", help="output folder (default footage)")
+    return parser.parse_args(argv)
 
-# Setup FPS counter
-window_start_time = time.perf_counter()
-frame_counter = 0
-target_FPS = 30
 
-# Setup recording
-os.makedirs("footage", exist_ok=True)
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-out = cv2.VideoWriter(f'footage/testing_{stamp}.mp4', 
-    fourcc, target_FPS, (frame_width, frame_height))
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+    cap = None
+    out = None
+    try:
+        cap = open_camera(args.camera, args.size)
+        fps = measure_fps(cap)
+        print(describe_camera(cap, fps))
+        width, height = frame_size(cap)
 
-# Check that the writer opened
-if not out.isOpened():
-    print("Failure opening writer")
-    exit()
-else:
-    print("Writer opening")
+        os.makedirs(args.out_dir, exist_ok=True)
+        stamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        path = os.path.join(args.out_dir, f"testing_{stamp}.mp4")
+        out = cv2.VideoWriter(path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (width, height))
+        if not out.isOpened():
+            print(f"Could not open video writer for {path}", file=sys.stderr)
+            return 1
+        print(f"Recording to {path}")
 
-while True:
-    # Frame capture
-    ok, frame = cap.read()
-    if not ok:
-        break
+        counter = FpsCounter()
+        while True:
+            ok, frame = cap.read()
+            if not ok:
+                print("Failed to read a frame from the camera", file=sys.stderr)
+                return 1
+            out.write(frame)
 
-    # FPS counter setup
-    curr_frame = time.perf_counter()
-    frame_counter += 1
-    if frame_counter % 30 == 0:
-        FPS_count = round(frame_counter / (curr_frame - window_start_time))
-        frame_counter = 0
-        window_start_time = curr_frame
+            counter.tick()
+            display = frame.copy()
+            cv2.putText(
+                display, counter.text, (width - 80, height - 40),
+                cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0),
+            )
+            cv2.putText(
+                display, "Press q to quit", (10, 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.8, (100, 100, 100),
+            )
+            cv2.imshow("Test", display)
+            if cv2.waitKey(1) & 0xFF == ord("q"):
+                return 0
+    except CameraError as error:
+        print(error, file=sys.stderr)
+        return 1
+    finally:
+        if cap is not None:
+            cap.release()
+        if out is not None:
+            out.release()
+        cv2.destroyAllWindows()
 
-    # Display the window UI thats recorded
-    display_position = frame_width - 80, frame_height - 40
-    cv2.putText(frame, str(FPS_count), display_position, cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 250, 0))
-    
-    # Write the frame to the recording
-    out.write(frame)
 
-    # Add remaining UI that wont be recorded
-    cv2.putText(frame, "Press q to quit", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (100, 100, 100))
-    cv2.imshow("Test", frame)
-    
-    # Quit
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-
-# Close program
-cap.release()
-out.release()
-cv2.destroyAllWindows()
+if __name__ == "__main__":
+    sys.exit(main())
