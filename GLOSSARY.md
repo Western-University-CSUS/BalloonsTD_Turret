@@ -64,5 +64,13 @@ One continuous recording of balloons in one room under one setup; the unit of th
 _Avoid_: clip, run, video
 
 **Test set**:
-The frozen, versioned set of Sessions used only for the classical-vs-YOLO benchmark, never for training or tuning.
+The frozen, versioned set of Sessions used only for the Benchmark, never for training or tuning.
 _Avoid_: holdout, eval set
+
+**Benchmark**:
+The head-to-head scoring of Detectors on the Test set. Only runs on a frozen Test set are official.
+_Avoid_: eval, comparison
+
+**Live threshold**:
+The Score below which a Detector's Detections are discarded when it runs on the turret.
+_Avoid_: cutoff, confidence threshold
